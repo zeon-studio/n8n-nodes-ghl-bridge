@@ -4,11 +4,23 @@
   "description": "GoHighLevel Token Broker integration",
   "author": "Zeon Studio <zeonstudiohq@gmail.com> (https://zeon.studio)",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zeon-studio/n8n-nodes-ghl-bridge.git"
+  },
+  "homepage": "https://github.com/zeon-studio/n8n-nodes-ghl-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/zeon-studio/n8n-nodes-ghl-bridge/issues"
+  },
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "lint": "eslint \"credentials/**/*.ts\" \"nodes/**/*.ts\""
+    "lint": "eslint \"credentials/**/*.ts\" \"nodes/**/*.ts\"",
+    "prerelease": "git add -A && git diff --cached --quiet || git commit -m 'chore: release prep'",
+    "release-patch": "npm run prerelease && npm version patch && npm run build && npm publish --access public && git push && git push --tags",
+    "release-minor": "npm run prerelease && npm version minor && npm run build && npm publish --access public && git push && git push --tags",
+    "release-major": "npm run prerelease && npm version major && npm run build && npm publish --access public && git push && git push --tags"
   },
   "keywords": [
     "n8n-community-node-package"
