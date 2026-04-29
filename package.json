@@ -1,0 +1,39 @@
+{
+  "name": "n8n-nodes-ghl-bridge",
+  "version": "1.0.0",
+  "description": "GoHighLevel Token Broker integration",
+  "author": "Zeon Studio <zeonstudiohq@gmail.com> (https://zeon.studio)",
+  "license": "MIT",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "lint": "eslint \"credentials/**/*.ts\" \"nodes/**/*.ts\""
+  },
+  "keywords": [
+    "n8n-community-node-package"
+  ],
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "n8n-core": "^1.0.0",
+    "n8n-workflow": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "eslint": "^8.0.0",
+    "tslint": "^6.1.3",
+    "typescript": "^5.0.0"
+  },
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/GhlBridgeApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/GhlBridge/GhlBridge.node.js",
+      "dist/nodes/GhlBridgeTrigger/GhlBridgeTrigger.node.js"
+    ]
+  }
+}
