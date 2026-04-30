@@ -1,4 +1,4 @@
-import { ICredentialType, INodeProperties } from 'n8n-workflow';
+import { ICredentialType, INodeProperties } from "n8n-workflow";
 export declare class GhlBridgeApi implements ICredentialType {
     name: string;
     displayName: string;
