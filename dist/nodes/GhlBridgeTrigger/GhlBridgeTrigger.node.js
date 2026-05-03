@@ -131,9 +131,14 @@ class GhlBridgeTrigger {
                             description: "Listen to every event received for this location",
                         },
                         {
-                            name: "Select Events",
+                            name: "Single Event",
+                            value: "single",
+                            description: "Listen to a single specific event",
+                        },
+                        {
+                            name: "Multiple Events",
                             value: "catalog",
-                            description: "Choose one or more known GoHighLevel events",
+                            description: "Choose multiple known GoHighLevel events",
                         },
                         {
                             name: "Manual Event Names",
@@ -141,8 +146,21 @@ class GhlBridgeTrigger {
                             description: "Enter custom event names for events not listed in the catalog",
                         },
                     ],
-                    default: "catalog",
+                    default: "single",
                     description: "How this trigger should subscribe to GoHighLevel events",
+                },
+                {
+                    displayName: "Event",
+                    name: "event",
+                    type: "options",
+                    options: GHL_WEBHOOK_EVENT_OPTIONS,
+                    default: "ContactCreate",
+                    displayOptions: {
+                        show: {
+                            triggerMode: ["single"],
+                        },
+                    },
+                    description: "Known GoHighLevel event to subscribe to",
                 },
                 {
                     displayName: "Event Types",
@@ -186,6 +204,9 @@ class GhlBridgeTrigger {
                     let eventTypes = [];
                     if (triggerMode === "all") {
                         eventTypes = ["*"];
+                    }
+                    else if (triggerMode === "single") {
+                        eventTypes = [this.getNodeParameter("event")];
                     }
                     else if (triggerMode === "catalog") {
                         eventTypes = this.getNodeParameter("eventTypesCatalog");
