@@ -142,6 +142,10 @@ exports.calendarOperations = {
     displayOptions: { show: { resource: ["calendar"] } },
     options: [
         { name: "Get Events", value: "getEvents", action: "Get calendar events" },
+        { name: "Get Free Slots", value: "getFreeSlots", action: "Get free slots for a calendar" },
+        { name: "Book Appointment", value: "bookAppointment", action: "Book a new appointment" },
+        { name: "Update Appointment", value: "updateAppointment", action: "Update an existing appointment" },
+        { name: "Delete Appointment", value: "deleteAppointment", action: "Delete an existing appointment" },
     ],
     default: "getEvents",
 };
@@ -195,5 +199,120 @@ exports.calendarFields = [
             show: { resource: ["calendar"], operation: ["getEvents"] },
         },
         description: "Optional. Required if Calendar ID and User ID are empty.",
+    },
+    // ── GET FREE SLOTS ───────────────────────────────────────────────────────
+    {
+        displayName: "Calendar ID",
+        name: "calendarId",
+        type: "string",
+        required: true,
+        default: "",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["getFreeSlots"] },
+        },
+        description: "The unique ID of the target calendar",
+    },
+    {
+        displayName: "Start Date",
+        name: "startDate",
+        type: "dateTime",
+        required: true,
+        default: "",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["getFreeSlots"] },
+        },
+    },
+    {
+        displayName: "End Date",
+        name: "endDate",
+        type: "dateTime",
+        required: true,
+        default: "",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["getFreeSlots"] },
+        },
+    },
+    // ── UPDATE / DELETE APPOINTMENT ──────────────────────────────────────────
+    {
+        displayName: "Appointment ID",
+        name: "appointmentId",
+        type: "string",
+        required: true,
+        default: "",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["updateAppointment", "deleteAppointment"] },
+        },
+        description: "The unique ID of the appointment",
+    },
+    // ── BOOK / UPDATE APPOINTMENT ────────────────────────────────────────────
+    {
+        displayName: "Calendar ID",
+        name: "calendarId",
+        type: "string",
+        required: true,
+        default: "",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["bookAppointment", "updateAppointment"] },
+        },
+        description: "The unique ID of the target calendar",
+    },
+    {
+        displayName: "Contact ID",
+        name: "contactId",
+        type: "string",
+        required: true,
+        default: "",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["bookAppointment", "updateAppointment"] },
+        },
+        description: "The unique ID of the contact you are booking for",
+    },
+    {
+        displayName: "Start Time",
+        name: "startTime",
+        type: "dateTime",
+        required: true,
+        default: "",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["bookAppointment", "updateAppointment"] },
+        },
+        description: "The start time of the appointment",
+    },
+    {
+        displayName: "End Time (Optional)",
+        name: "endTime",
+        type: "dateTime",
+        default: "",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["bookAppointment", "updateAppointment"] },
+        },
+        description: "The end time of the appointment",
+    },
+    {
+        displayName: "Title (Optional)",
+        name: "title",
+        type: "string",
+        default: "",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["bookAppointment", "updateAppointment"] },
+        },
+        description: "Title of the appointment",
+    },
+    {
+        displayName: "Appointment Status (Optional)",
+        name: "appointmentStatus",
+        type: "options",
+        options: [
+            { name: "New", value: "new" },
+            { name: "Confirmed", value: "confirmed" },
+            { name: "Cancelled", value: "cancelled" },
+            { name: "Showed", value: "showed" },
+            { name: "No-Show", value: "noshow" },
+            { name: "Invalid", value: "invalid" },
+        ],
+        default: "new",
+        displayOptions: {
+            show: { resource: ["calendar"], operation: ["bookAppointment", "updateAppointment"] },
+        },
     },
 ];

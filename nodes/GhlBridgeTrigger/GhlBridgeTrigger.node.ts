@@ -20,6 +20,8 @@ const GHL_WEBHOOK_EVENT_OPTIONS: INodePropertyOptions[] = [
   { name: "Contact Deleted", value: "ContactDelete" },
   { name: "Contact DND Updated", value: "ContactDndUpdate" },
   { name: "Contact Tag Updated", value: "ContactTagUpdate" },
+  { name: "Contact Merged", value: "ContactMerge" },
+  { name: "Contact Birthday", value: "ContactBirthday" },
   // Conversations & Messages (conversations + conversations/message scope)
   { name: "Conversation Unread Updated", value: "ConversationUnreadUpdate" },
   { name: "Inbound Message", value: "InboundMessage" },
@@ -28,6 +30,8 @@ const GHL_WEBHOOK_EVENT_OPTIONS: INodePropertyOptions[] = [
   { name: "Location Created", value: "LocationCreate" },
   { name: "Location Updated", value: "LocationUpdate" },
   { name: "Location Deleted", value: "LocationDelete" },
+  // Forms (forms scope)
+  { name: "Form Submitted", value: "FormSubmit" },
   // Notes (contacts scope)
   { name: "Note Created", value: "NoteCreate" },
   { name: "Note Updated", value: "NoteUpdate" },
@@ -46,14 +50,11 @@ const GHL_WEBHOOK_EVENT_OPTIONS: INodePropertyOptions[] = [
     value: "OpportunityMonetaryValueUpdate",
   },
   { name: "Opportunity Stage Updated", value: "OpportunityStageUpdate" },
+  { name: "Opportunity Stale", value: "OpportunityStale" },
   // Tasks (contacts scope)
   { name: "Task Created", value: "TaskCreate" },
   { name: "Task Deleted", value: "TaskDelete" },
   { name: "Task Completed", value: "TaskComplete" },
-  // Users (users scope)
-  { name: "User Created", value: "UserCreate" },
-  { name: "User Updated", value: "UserUpdate" },
-  { name: "User Deleted", value: "UserDelete" },
 ];
 
 function parseManualEventTypes(raw: string): string[] {

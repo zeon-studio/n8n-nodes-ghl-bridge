@@ -15,6 +15,7 @@ const OPERATION_SCOPE_HINTS = {
     "contact:getAll": ["contacts.readonly"],
     "contact:search": ["contacts.readonly"],
     "contact:create": ["contacts.write"],
+    "contact:upsert": ["contacts.write"],
     "contact:update": ["contacts.write"],
     "contact:delete": ["contacts.write"],
     "contact:addTags": ["contacts.write"],
@@ -30,11 +31,15 @@ const OPERATION_SCOPE_HINTS = {
     "conversation:sendSms": ["conversations/message.write"],
     "conversation:sendEmail": ["conversations/message.write"],
     "calendar:getEvents": ["calendars/events.readonly"],
+    "calendar:getFreeSlots": ["calendars.readonly"],
+    "calendar:bookAppointment": ["calendars/events.write"],
+    "calendar:updateAppointment": ["calendars/events.write"],
+    "calendar:deleteAppointment": ["calendars/events.write"],
     "form:getAll": ["forms.readonly"],
     "form:getSubmissions": ["forms.readonly"],
     "workflow:getAll": ["workflows.readonly"],
-    "workflow:addContact": ["workflows.write"],
-    "workflow:removeContact": ["workflows.write"],
+    "workflow:addContact": ["contacts.write"],
+    "workflow:removeContact": ["contacts.write"],
     "location:get": ["locations.readonly"],
     "location:getCustomFields": ["locations.readonly"],
     "location:createCustomField": ["locations/customFields.write"],
@@ -47,9 +52,6 @@ const OPERATION_SCOPE_HINTS = {
     "user:get": ["users.readonly"],
     "user:getAll": ["users.readonly"],
     "user:getByEmail": ["users.readonly"],
-    "user:create": ["users.write"],
-    "user:update": ["users.write"],
-    "user:delete": ["users.write"],
 };
 function getScopeHint(resource, operation) {
     const key = `${resource}:${operation}`;
@@ -321,6 +323,27 @@ class GhlBridge {
                             body.tags = body.tags.split(",").map((t) => t.trim());
                         }
                     }
+                    else if (operation === "upsert") {
+                        endpoint = "/contacts/upsert";
+                        method = "POST";
+                        qs = {};
+                        const firstName = this.getNodeParameter("firstName", i, "");
+                        const lastName = this.getNodeParameter("lastName", i, "");
+                        const email = this.getNodeParameter("email", i, "");
+                        const phone = this.getNodeParameter("phone", i, "");
+                        const additionalFields = this.getNodeParameter("additionalFields", i, {});
+                        body = {
+                            locationId,
+                            ...(firstName && { firstName }),
+                            ...(lastName && { lastName }),
+                            ...(email && { email }),
+                            ...(phone && { phone }),
+                            ...additionalFields,
+                        };
+                        if (typeof body.tags === "string" && body.tags) {
+                            body.tags = body.tags.split(",").map((t) => t.trim());
+                        }
+                    }
                     else if (operation === "update") {
                         const contactId = this.getNodeParameter("contactId", i);
                         endpoint = `/contacts/${contactId}`;
@@ -472,6 +495,62 @@ class GhlBridge {
                             ...(userId && { userId }),
                             ...(groupId && { groupId }),
                         };
+                    }
+                    else if (operation === "getFreeSlots") {
+                        const calendarId = this.getNodeParameter("calendarId", i);
+                        const startDate = this.getNodeParameter("startDate", i);
+                        const endDate = this.getNodeParameter("endDate", i);
+                        endpoint = `/calendars/${calendarId}/free-slots`;
+                        qs = {
+                            startDate: new Date(startDate).getTime(),
+                            endDate: new Date(endDate).getTime(),
+                        };
+                    }
+                    else if (operation === "bookAppointment") {
+                        const calendarId = this.getNodeParameter("calendarId", i);
+                        const contactId = this.getNodeParameter("contactId", i);
+                        const startTime = this.getNodeParameter("startTime", i);
+                        const endTime = this.getNodeParameter("endTime", i, "");
+                        const title = this.getNodeParameter("title", i, "");
+                        const appointmentStatus = this.getNodeParameter("appointmentStatus", i, "new");
+                        endpoint = "/calendars/events/appointments";
+                        method = "POST";
+                        qs = {};
+                        body = {
+                            calendarId,
+                            locationId,
+                            contactId,
+                            startTime: new Date(startTime).toISOString(),
+                            ...(endTime && { endTime: new Date(endTime).toISOString() }),
+                            ...(title && { title }),
+                            appointmentStatus,
+                        };
+                    }
+                    else if (operation === "updateAppointment") {
+                        const appointmentId = this.getNodeParameter("appointmentId", i);
+                        const calendarId = this.getNodeParameter("calendarId", i, "");
+                        const contactId = this.getNodeParameter("contactId", i, "");
+                        const startTime = this.getNodeParameter("startTime", i, "");
+                        const endTime = this.getNodeParameter("endTime", i, "");
+                        const title = this.getNodeParameter("title", i, "");
+                        const appointmentStatus = this.getNodeParameter("appointmentStatus", i, "new");
+                        endpoint = `/calendars/events/appointments/${appointmentId}`;
+                        method = "PUT";
+                        qs = {};
+                        body = {
+                            ...(calendarId && { calendarId }),
+                            ...(contactId && { contactId }),
+                            ...(startTime && { startTime: new Date(startTime).toISOString() }),
+                            ...(endTime && { endTime: new Date(endTime).toISOString() }),
+                            ...(title && { title }),
+                            appointmentStatus,
+                        };
+                    }
+                    else if (operation === "deleteAppointment") {
+                        const appointmentId = this.getNodeParameter("appointmentId", i);
+                        endpoint = `/calendars/events/appointments/${appointmentId}`;
+                        method = "DELETE";
+                        qs = {};
                     }
                     // ── FORM ──────────────────────────────────────────────────────────
                 }
@@ -629,35 +708,6 @@ class GhlBridge {
                             pairedItem: { item: i },
                         });
                         continue;
-                    }
-                    else if (operation === "create") {
-                        endpoint = "/users/";
-                        method = "POST";
-                        qs = {};
-                        body = {
-                            locationIds: [locationId],
-                            firstName: this.getNodeParameter("firstName", i),
-                            lastName: this.getNodeParameter("lastName", i),
-                            email: this.getNodeParameter("email", i),
-                            password: this.getNodeParameter("password", i),
-                            role: this.getNodeParameter("role", i),
-                            phone: this.getNodeParameter("phone", i, ""),
-                        };
-                    }
-                    else if (operation === "update") {
-                        const userId = this.getNodeParameter("userId", i);
-                        endpoint = `/users/${userId}`;
-                        method = "PUT";
-                        qs = {};
-                        body = {
-                            ...this.getNodeParameter("updateFields", i, {}),
-                        };
-                    }
-                    else if (operation === "delete") {
-                        const userId = this.getNodeParameter("userId", i);
-                        endpoint = `/users/${userId}`;
-                        method = "DELETE";
-                        qs = {};
                     }
                     // ── CUSTOM ────────────────────────────────────────────────────────
                 }

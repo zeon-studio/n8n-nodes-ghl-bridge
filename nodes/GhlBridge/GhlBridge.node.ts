@@ -40,6 +40,7 @@ const OPERATION_SCOPE_HINTS: Record<string, string[]> = {
   "contact:getAll": ["contacts.readonly"],
   "contact:search": ["contacts.readonly"],
   "contact:create": ["contacts.write"],
+  "contact:upsert": ["contacts.write"],
   "contact:update": ["contacts.write"],
   "contact:delete": ["contacts.write"],
   "contact:addTags": ["contacts.write"],
@@ -58,13 +59,17 @@ const OPERATION_SCOPE_HINTS: Record<string, string[]> = {
   "conversation:sendEmail": ["conversations/message.write"],
 
   "calendar:getEvents": ["calendars/events.readonly"],
+  "calendar:getFreeSlots": ["calendars.readonly"],
+  "calendar:bookAppointment": ["calendars/events.write"],
+  "calendar:updateAppointment": ["calendars/events.write"],
+  "calendar:deleteAppointment": ["calendars/events.write"],
 
   "form:getAll": ["forms.readonly"],
   "form:getSubmissions": ["forms.readonly"],
 
   "workflow:getAll": ["workflows.readonly"],
-  "workflow:addContact": ["workflows.write"],
-  "workflow:removeContact": ["workflows.write"],
+  "workflow:addContact": ["contacts.write"],
+  "workflow:removeContact": ["contacts.write"],
 
   "location:get": ["locations.readonly"],
   "location:getCustomFields": ["locations.readonly"],
@@ -79,9 +84,6 @@ const OPERATION_SCOPE_HINTS: Record<string, string[]> = {
   "user:get": ["users.readonly"],
   "user:getAll": ["users.readonly"],
   "user:getByEmail": ["users.readonly"],
-  "user:create": ["users.write"],
-  "user:update": ["users.write"],
-  "user:delete": ["users.write"],
 };
 
 function getScopeHint(resource: string, operation: string): string | undefined {
@@ -378,6 +380,34 @@ export class GhlBridge implements INodeType {
             if (typeof body.tags === "string" && body.tags) {
               body.tags = (body.tags as string).split(",").map((t) => t.trim());
             }
+          } else if (operation === "upsert") {
+            endpoint = "/contacts/upsert";
+            method = "POST";
+            qs = {};
+            const firstName = this.getNodeParameter(
+              "firstName",
+              i,
+              "",
+            ) as string;
+            const lastName = this.getNodeParameter("lastName", i, "") as string;
+            const email = this.getNodeParameter("email", i, "") as string;
+            const phone = this.getNodeParameter("phone", i, "") as string;
+            const additionalFields = this.getNodeParameter(
+              "additionalFields",
+              i,
+              {},
+            ) as Record<string, unknown>;
+            body = {
+              locationId,
+              ...(firstName && { firstName }),
+              ...(lastName && { lastName }),
+              ...(email && { email }),
+              ...(phone && { phone }),
+              ...additionalFields,
+            };
+            if (typeof body.tags === "string" && body.tags) {
+              body.tags = (body.tags as string).split(",").map((t) => t.trim());
+            }
           } else if (operation === "update") {
             const contactId = this.getNodeParameter("contactId", i) as string;
             endpoint = `/contacts/${contactId}`;
@@ -558,6 +588,70 @@ export class GhlBridge implements INodeType {
               ...(userId && { userId }),
               ...(groupId && { groupId }),
             };
+          } else if (operation === "getFreeSlots") {
+            const calendarId = this.getNodeParameter("calendarId", i) as string;
+            const startDate = this.getNodeParameter("startDate", i) as string;
+            const endDate = this.getNodeParameter("endDate", i) as string;
+
+            endpoint = `/calendars/${calendarId}/free-slots`;
+            qs = {
+              startDate: new Date(startDate).getTime(),
+              endDate: new Date(endDate).getTime(),
+            };
+          } else if (operation === "bookAppointment") {
+            const calendarId = this.getNodeParameter("calendarId", i) as string;
+            const contactId = this.getNodeParameter("contactId", i) as string;
+            const startTime = this.getNodeParameter("startTime", i) as string;
+            const endTime = this.getNodeParameter("endTime", i, "") as string;
+            const title = this.getNodeParameter("title", i, "") as string;
+            const appointmentStatus = this.getNodeParameter(
+              "appointmentStatus",
+              i,
+              "new",
+            ) as string;
+
+            endpoint = "/calendars/events/appointments";
+            method = "POST";
+            qs = {};
+            body = {
+              calendarId,
+              locationId,
+              contactId,
+              startTime: new Date(startTime).toISOString(),
+              ...(endTime && { endTime: new Date(endTime).toISOString() }),
+              ...(title && { title }),
+              appointmentStatus,
+            };
+          } else if (operation === "updateAppointment") {
+            const appointmentId = this.getNodeParameter("appointmentId", i) as string;
+            const calendarId = this.getNodeParameter("calendarId", i, "") as string;
+            const contactId = this.getNodeParameter("contactId", i, "") as string;
+            const startTime = this.getNodeParameter("startTime", i, "") as string;
+            const endTime = this.getNodeParameter("endTime", i, "") as string;
+            const title = this.getNodeParameter("title", i, "") as string;
+            const appointmentStatus = this.getNodeParameter(
+              "appointmentStatus",
+              i,
+              "new"
+            ) as string;
+
+            endpoint = `/calendars/events/appointments/${appointmentId}`;
+            method = "PUT";
+            qs = {};
+            body = {
+              ...(calendarId && { calendarId }),
+              ...(contactId && { contactId }),
+              ...(startTime && { startTime: new Date(startTime).toISOString() }),
+              ...(endTime && { endTime: new Date(endTime).toISOString() }),
+              ...(title && { title }),
+              appointmentStatus,
+            };
+          } else if (operation === "deleteAppointment") {
+            const appointmentId = this.getNodeParameter("appointmentId", i) as string;
+
+            endpoint = `/calendars/events/appointments/${appointmentId}`;
+            method = "DELETE";
+            qs = {};
           }
 
           // ── FORM ──────────────────────────────────────────────────────────
@@ -729,32 +823,6 @@ export class GhlBridge implements INodeType {
               pairedItem: { item: i },
             });
             continue;
-          } else if (operation === "create") {
-            endpoint = "/users/";
-            method = "POST";
-            qs = {};
-            body = {
-              locationIds: [locationId],
-              firstName: this.getNodeParameter("firstName", i) as string,
-              lastName: this.getNodeParameter("lastName", i) as string,
-              email: this.getNodeParameter("email", i) as string,
-              password: this.getNodeParameter("password", i) as string,
-              role: this.getNodeParameter("role", i) as string,
-              phone: this.getNodeParameter("phone", i, "") as string,
-            };
-          } else if (operation === "update") {
-            const userId = this.getNodeParameter("userId", i) as string;
-            endpoint = `/users/${userId}`;
-            method = "PUT";
-            qs = {};
-            body = {
-              ...(this.getNodeParameter("updateFields", i, {}) as IDataObject),
-            };
-          } else if (operation === "delete") {
-            const userId = this.getNodeParameter("userId", i) as string;
-            endpoint = `/users/${userId}`;
-            method = "DELETE";
-            qs = {};
           }
 
           // ── CUSTOM ────────────────────────────────────────────────────────
