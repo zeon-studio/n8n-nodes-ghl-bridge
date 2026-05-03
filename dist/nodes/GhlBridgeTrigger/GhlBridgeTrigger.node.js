@@ -35,52 +35,49 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GhlBridgeTrigger = void 0;
 const crypto = __importStar(require("crypto"));
-const GHL_WEBHOOK_EVENT_OPTIONS = [
-    // Appointments (calendars scope)
-    { name: "Appointment Created", value: "AppointmentCreate" },
-    { name: "Appointment Updated", value: "AppointmentUpdate" },
-    { name: "Appointment Deleted", value: "AppointmentDelete" },
-    // Contacts (contacts scope)
-    { name: "Contact Created", value: "ContactCreate" },
-    { name: "Contact Updated", value: "ContactUpdate" },
-    { name: "Contact Deleted", value: "ContactDelete" },
-    { name: "Contact DND Updated", value: "ContactDndUpdate" },
-    { name: "Contact Tag Updated", value: "ContactTagUpdate" },
-    { name: "Contact Merged", value: "ContactMerge" },
-    { name: "Contact Birthday", value: "ContactBirthday" },
-    // Conversations & Messages (conversations + conversations/message scope)
-    { name: "Conversation Unread Updated", value: "ConversationUnreadUpdate" },
-    { name: "Inbound Message", value: "InboundMessage" },
-    { name: "Outbound Message", value: "OutboundMessage" },
-    // Locations (locations scope)
-    { name: "Location Created", value: "LocationCreate" },
-    { name: "Location Updated", value: "LocationUpdate" },
-    { name: "Location Deleted", value: "LocationDelete" },
-    // Forms (forms scope)
-    { name: "Form Submitted", value: "FormSubmit" },
-    // Notes (contacts scope)
-    { name: "Note Created", value: "NoteCreate" },
-    { name: "Note Updated", value: "NoteUpdate" },
-    { name: "Note Deleted", value: "NoteDelete" },
-    // Opportunities (opportunities scope)
-    { name: "Opportunity Created", value: "OpportunityCreate" },
-    { name: "Opportunity Updated", value: "OpportunityUpdate" },
-    { name: "Opportunity Deleted", value: "OpportunityDelete" },
-    { name: "Opportunity Status Updated", value: "OpportunityStatusUpdate" },
-    {
-        name: "Opportunity Assigned To Updated",
-        value: "OpportunityAssignedToUpdate",
-    },
-    {
-        name: "Opportunity Monetary Value Updated",
-        value: "OpportunityMonetaryValueUpdate",
-    },
-    { name: "Opportunity Stage Updated", value: "OpportunityStageUpdate" },
-    { name: "Opportunity Stale", value: "OpportunityStale" },
-    // Tasks (contacts scope)
-    { name: "Task Created", value: "TaskCreate" },
-    { name: "Task Deleted", value: "TaskDelete" },
-    { name: "Task Completed", value: "TaskComplete" },
+const GHL_TRIGGER_RESOURCES = [
+    { name: "Appointment", value: "appointment" },
+    { name: "Contact", value: "contact" },
+    { name: "Conversation", value: "conversation" },
+    { name: "Form", value: "form" },
+    { name: "Location", value: "location" },
+    { name: "Note", value: "note" },
+    { name: "Opportunity", value: "opportunity" },
+    { name: "Task", value: "task" },
+];
+// Used only for multiOptions catalog (no displayOptions on items)
+const GHL_ALL_EVENT_OPTIONS = [
+    { name: "Appointment Created", value: "AppointmentCreate", action: "On appointment created" },
+    { name: "Appointment Updated", value: "AppointmentUpdate", action: "On appointment updated" },
+    { name: "Appointment Deleted", value: "AppointmentDelete", action: "On appointment deleted" },
+    { name: "Contact Created", value: "ContactCreate", action: "On contact created" },
+    { name: "Contact Updated", value: "ContactUpdate", action: "On contact updated" },
+    { name: "Contact Deleted", value: "ContactDelete", action: "On contact deleted" },
+    { name: "Contact DND Updated", value: "ContactDndUpdate", action: "On contact dnd updated" },
+    { name: "Contact Tag Updated", value: "ContactTagUpdate", action: "On contact tag updated" },
+    { name: "Contact Merged", value: "ContactMerge", action: "On contact merged" },
+    { name: "Contact Birthday", value: "ContactBirthday", action: "On contact birthday" },
+    { name: "Conversation Unread Updated", value: "ConversationUnreadUpdate", action: "On conversation unread updated" },
+    { name: "Inbound Message", value: "InboundMessage", action: "On inbound message" },
+    { name: "Outbound Message", value: "OutboundMessage", action: "On outbound message" },
+    { name: "Form Submitted", value: "FormSubmit", action: "On form submitted" },
+    { name: "Location Created", value: "LocationCreate", action: "On location created" },
+    { name: "Location Updated", value: "LocationUpdate", action: "On location updated" },
+    { name: "Location Deleted", value: "LocationDelete", action: "On location deleted" },
+    { name: "Note Created", value: "NoteCreate", action: "On note created" },
+    { name: "Note Updated", value: "NoteUpdate", action: "On note updated" },
+    { name: "Note Deleted", value: "NoteDelete", action: "On note deleted" },
+    { name: "Opportunity Created", value: "OpportunityCreate", action: "On opportunity created" },
+    { name: "Opportunity Updated", value: "OpportunityUpdate", action: "On opportunity updated" },
+    { name: "Opportunity Deleted", value: "OpportunityDelete", action: "On opportunity deleted" },
+    { name: "Opportunity Status Updated", value: "OpportunityStatusUpdate", action: "On opportunity status updated" },
+    { name: "Opportunity Assigned To Updated", value: "OpportunityAssignedToUpdate", action: "On opportunity assigned to updated" },
+    { name: "Opportunity Monetary Value Updated", value: "OpportunityMonetaryValueUpdate", action: "On opportunity monetary value updated" },
+    { name: "Opportunity Stage Updated", value: "OpportunityStageUpdate", action: "On opportunity stage updated" },
+    { name: "Opportunity Stale", value: "OpportunityStale", action: "On opportunity stale" },
+    { name: "Task Created", value: "TaskCreate", action: "On task created" },
+    { name: "Task Deleted", value: "TaskDelete", action: "On task deleted" },
+    { name: "Task Completed", value: "TaskComplete", action: "On task completed" },
 ];
 function parseManualEventTypes(raw) {
     return Array.from(new Set(raw
@@ -96,6 +93,7 @@ class GhlBridgeTrigger {
             icon: "file:ghl-webhook.svg",
             group: ["trigger"],
             version: 1,
+            subtitle: '={{$parameter["resource"] + " • " + $parameter["operation"]}}',
             description: "Triggers on GoHighLevel Webhooks via Token Broker",
             defaults: {
                 name: "GHL Bridge Trigger",
@@ -120,6 +118,7 @@ class GhlBridgeTrigger {
                 },
             ],
             properties: [
+                // ── TRIGGER MODE ──────────────────────────────────────────────────────
                 {
                     displayName: "Trigger Mode",
                     name: "triggerMode",
@@ -150,32 +149,195 @@ class GhlBridgeTrigger {
                     default: "single",
                     description: "How this trigger should subscribe to GoHighLevel events",
                 },
+                // ── RESOURCE (shown for single + catalog) ─────────────────────────────
                 {
-                    displayName: "Event",
-                    name: "event",
+                    displayName: "Resource",
+                    name: "resource",
                     type: "options",
-                    options: GHL_WEBHOOK_EVENT_OPTIONS,
+                    noDataExpression: true,
+                    options: GHL_TRIGGER_RESOURCES,
+                    default: "contact",
+                    displayOptions: {
+                        show: {
+                            triggerMode: ["single", "catalog"],
+                        },
+                    },
+                    description: "The GoHighLevel resource to listen to",
+                },
+                // ── OPERATION: Appointment ────────────────────────────────────────────
+                {
+                    displayName: "Operation",
+                    name: "operation",
+                    type: "options",
+                    options: [
+                        { name: "Appointment Created", value: "AppointmentCreate", action: "On appointment created" },
+                        { name: "Appointment Updated", value: "AppointmentUpdate", action: "On appointment updated" },
+                        { name: "Appointment Deleted", value: "AppointmentDelete", action: "On appointment deleted" },
+                    ],
+                    default: "AppointmentCreate",
+                    displayOptions: {
+                        show: {
+                            triggerMode: ["single"],
+                            resource: ["appointment"],
+                        },
+                    },
+                    description: "The appointment event to listen for",
+                },
+                // ── OPERATION: Contact ────────────────────────────────────────────────
+                {
+                    displayName: "Operation",
+                    name: "operation",
+                    type: "options",
+                    options: [
+                        { name: "Contact Birthday", value: "ContactBirthday", action: "On contact birthday" },
+                        { name: "Contact Created", value: "ContactCreate", action: "On contact created" },
+                        { name: "Contact Deleted", value: "ContactDelete", action: "On contact deleted" },
+                        { name: "Contact DND Updated", value: "ContactDndUpdate", action: "On contact dnd updated" },
+                        { name: "Contact Merged", value: "ContactMerge", action: "On contact merged" },
+                        { name: "Contact Tag Updated", value: "ContactTagUpdate", action: "On contact tag updated" },
+                        { name: "Contact Updated", value: "ContactUpdate", action: "On contact updated" },
+                    ],
                     default: "ContactCreate",
                     displayOptions: {
                         show: {
                             triggerMode: ["single"],
+                            resource: ["contact"],
                         },
                     },
-                    description: "Known GoHighLevel event to subscribe to",
+                    description: "The contact event to listen for",
                 },
+                // ── OPERATION: Conversation ───────────────────────────────────────────
+                {
+                    displayName: "Operation",
+                    name: "operation",
+                    type: "options",
+                    options: [
+                        { name: "Conversation Unread Updated", value: "ConversationUnreadUpdate", action: "On conversation unread updated" },
+                        { name: "Inbound Message", value: "InboundMessage", action: "On inbound message" },
+                        { name: "Outbound Message", value: "OutboundMessage", action: "On outbound message" },
+                    ],
+                    default: "InboundMessage",
+                    displayOptions: {
+                        show: {
+                            triggerMode: ["single"],
+                            resource: ["conversation"],
+                        },
+                    },
+                    description: "The conversation event to listen for",
+                },
+                // ── OPERATION: Form ───────────────────────────────────────────────────
+                {
+                    displayName: "Operation",
+                    name: "operation",
+                    type: "options",
+                    options: [
+                        { name: "Form Submitted", value: "FormSubmit", action: "On form submitted" },
+                    ],
+                    default: "FormSubmit",
+                    displayOptions: {
+                        show: {
+                            triggerMode: ["single"],
+                            resource: ["form"],
+                        },
+                    },
+                    description: "The form event to listen for",
+                },
+                // ── OPERATION: Location ───────────────────────────────────────────────
+                {
+                    displayName: "Operation",
+                    name: "operation",
+                    type: "options",
+                    options: [
+                        { name: "Location Created", value: "LocationCreate", action: "On location created" },
+                        { name: "Location Updated", value: "LocationUpdate", action: "On location updated" },
+                        { name: "Location Deleted", value: "LocationDelete", action: "On location deleted" },
+                    ],
+                    default: "LocationCreate",
+                    displayOptions: {
+                        show: {
+                            triggerMode: ["single"],
+                            resource: ["location"],
+                        },
+                    },
+                    description: "The location event to listen for",
+                },
+                // ── OPERATION: Note ───────────────────────────────────────────────────
+                {
+                    displayName: "Operation",
+                    name: "operation",
+                    type: "options",
+                    options: [
+                        { name: "Note Created", value: "NoteCreate", action: "On note created" },
+                        { name: "Note Deleted", value: "NoteDelete", action: "On note deleted" },
+                        { name: "Note Updated", value: "NoteUpdate", action: "On note updated" },
+                    ],
+                    default: "NoteCreate",
+                    displayOptions: {
+                        show: {
+                            triggerMode: ["single"],
+                            resource: ["note"],
+                        },
+                    },
+                    description: "The note event to listen for",
+                },
+                // ── OPERATION: Opportunity ────────────────────────────────────────────
+                {
+                    displayName: "Operation",
+                    name: "operation",
+                    type: "options",
+                    options: [
+                        { name: "Opportunity Assigned To Updated", value: "OpportunityAssignedToUpdate", action: "On opportunity assigned to updated" },
+                        { name: "Opportunity Created", value: "OpportunityCreate", action: "On opportunity created" },
+                        { name: "Opportunity Deleted", value: "OpportunityDelete", action: "On opportunity deleted" },
+                        { name: "Opportunity Monetary Value Updated", value: "OpportunityMonetaryValueUpdate", action: "On opportunity monetary value updated" },
+                        { name: "Opportunity Stage Updated", value: "OpportunityStageUpdate", action: "On opportunity stage updated" },
+                        { name: "Opportunity Stale", value: "OpportunityStale", action: "On opportunity stale" },
+                        { name: "Opportunity Status Updated", value: "OpportunityStatusUpdate", action: "On opportunity status updated" },
+                        { name: "Opportunity Updated", value: "OpportunityUpdate", action: "On opportunity updated" },
+                    ],
+                    default: "OpportunityCreate",
+                    displayOptions: {
+                        show: {
+                            triggerMode: ["single"],
+                            resource: ["opportunity"],
+                        },
+                    },
+                    description: "The opportunity event to listen for",
+                },
+                // ── OPERATION: Task ───────────────────────────────────────────────────
+                {
+                    displayName: "Operation",
+                    name: "operation",
+                    type: "options",
+                    options: [
+                        { name: "Task Completed", value: "TaskComplete", action: "On task completed" },
+                        { name: "Task Created", value: "TaskCreate", action: "On task created" },
+                        { name: "Task Deleted", value: "TaskDelete", action: "On task deleted" },
+                    ],
+                    default: "TaskCreate",
+                    displayOptions: {
+                        show: {
+                            triggerMode: ["single"],
+                            resource: ["task"],
+                        },
+                    },
+                    description: "The task event to listen for",
+                },
+                // ── MULTI-SELECT CATALOG ──────────────────────────────────────────────
                 {
                     displayName: "Event Types",
                     name: "eventTypesCatalog",
                     type: "multiOptions",
-                    options: GHL_WEBHOOK_EVENT_OPTIONS,
-                    default: ["ContactCreate"],
+                    options: GHL_ALL_EVENT_OPTIONS,
+                    default: [],
                     displayOptions: {
                         show: {
                             triggerMode: ["catalog"],
                         },
                     },
-                    description: "Known GoHighLevel events to subscribe to",
+                    description: "Choose multiple known GoHighLevel events",
                 },
+                // ── MANUAL ────────────────────────────────────────────────────────────
                 {
                     displayName: "Manual Event Types",
                     name: "eventTypesManual",
@@ -193,8 +355,6 @@ class GhlBridgeTrigger {
         this.webhookMethods = {
             default: {
                 async checkExists() {
-                    // Return false to always recreate for simplicity, or we can fetch subscriptions
-                    // Proper implementation would call backend to list subscriptions and check if webhookUrl exists
                     return false;
                 },
                 async create() {
@@ -207,7 +367,8 @@ class GhlBridgeTrigger {
                         eventTypes = ["*"];
                     }
                     else if (triggerMode === "single") {
-                        eventTypes = [this.getNodeParameter("event")];
+                        const operation = this.getNodeParameter("operation");
+                        eventTypes = [operation];
                     }
                     else if (triggerMode === "catalog") {
                         eventTypes = this.getNodeParameter("eventTypesCatalog");
@@ -221,7 +382,6 @@ class GhlBridgeTrigger {
                     }
                     const backendUrl = credentials.baseUrl.replace(/\/$/, "");
                     const bridgeKey = credentials.bridgeKey;
-                    // Generate a secret for HMAC if we don't have one
                     if (!webhookData.secret) {
                         webhookData.secret = crypto.randomBytes(32).toString("hex");
                     }
@@ -241,7 +401,6 @@ class GhlBridgeTrigger {
                     };
                     try {
                         const response = await this.helpers.httpRequest(options);
-                        // Store the subscription ID so we can delete it later
                         if (response &&
                             response.subscriptions &&
                             response.subscriptions.length > 0) {
@@ -273,7 +432,6 @@ class GhlBridgeTrigger {
                                 await this.helpers.httpRequest(options);
                             }
                             catch (error) {
-                                // Best effort deletion
                                 console.warn(`Failed to delete webhook subscription ${subId}: ${error.message}`);
                             }
                         }
@@ -289,7 +447,6 @@ class GhlBridgeTrigger {
         const headers = this.getHeaderData();
         const bodyData = this.getBodyData();
         const webhookData = this.getWorkflowStaticData("node");
-        // Verify HMAC Signature from the backend
         if (webhookData.secret) {
             const signature = headers["x-bridge-signature"];
             if (!signature) {
