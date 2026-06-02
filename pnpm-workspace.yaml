@@ -1,6 +1,9 @@
+packages:
+ - "."
+ 
 allowBuilds:
-  '@sentry-internal/node-native-stacktrace': set this to true or false
-  cpu-features: set this to true or false
-  eslint-plugin-n8n-nodes-base: set this to true or false
-  ssh2: set this to true or false
-  unrs-resolver: set this to true or false
+  '@sentry-internal/node-native-stacktrace': true
+  cpu-features: true
+  eslint-plugin-n8n-nodes-base: true
+  ssh2: true
+  unrs-resolver: true
