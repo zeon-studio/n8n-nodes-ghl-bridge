@@ -1,9 +1,11 @@
 packages:
- - "."
- 
+  - "."
+
 allowBuilds:
+  '@sentry-internal/node-cpu-profiler': true
   '@sentry-internal/node-native-stacktrace': true
   cpu-features: true
   eslint-plugin-n8n-nodes-base: true
+  isolated-vm: true
   ssh2: true
   unrs-resolver: true
