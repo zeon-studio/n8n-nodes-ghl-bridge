@@ -381,7 +381,6 @@ class GhlBridgeTrigger {
                         eventTypes = ["*"];
                     }
                     const backendUrl = credentials.baseUrl.replace(/\/$/, "");
-                    const bridgeKey = credentials.bridgeKey;
                     if (!webhookData.secret) {
                         webhookData.secret = crypto.randomBytes(32).toString("hex");
                     }
@@ -389,7 +388,6 @@ class GhlBridgeTrigger {
                         method: "POST",
                         url: `${backendUrl}/api/v1/webhooks/register`,
                         headers: {
-                            Authorization: `Bearer ${bridgeKey}`,
                             "Content-Type": "application/json",
                         },
                         body: {
@@ -400,8 +398,7 @@ class GhlBridgeTrigger {
                         json: true,
                     };
                     try {
-                        // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
-                        const response = await this.helpers.httpRequest(options);
+                        const response = await this.helpers.httpRequestWithAuthentication.call(this, "ghlBridgeApi", options);
                         if (response &&
                             response.subscriptions &&
                             response.subscriptions.length > 0) {
@@ -417,25 +414,19 @@ class GhlBridgeTrigger {
                     const webhookData = this.getWorkflowStaticData("node");
                     const credentials = await this.getCredentials("ghlBridgeApi");
                     const backendUrl = credentials.baseUrl.replace(/\/$/, "");
-                    const bridgeKey = credentials.bridgeKey;
                     if (webhookData.subscriptionIds &&
                         Array.isArray(webhookData.subscriptionIds)) {
                         for (const subId of webhookData.subscriptionIds) {
                             const options = {
                                 method: "DELETE",
                                 url: `${backendUrl}/api/v1/webhooks/${subId}`,
-                                headers: {
-                                    Authorization: `Bearer ${bridgeKey}`,
-                                },
                                 json: true,
                             };
                             try {
-                                // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
-                                await this.helpers.httpRequest(options);
+                                await this.helpers.httpRequestWithAuthentication.call(this, "ghlBridgeApi", options);
                             }
-                            catch (error) {
-                                // eslint-disable-next-line no-console
-                                console.warn(`Failed to delete webhook subscription ${subId}: ${error.message}`);
+                            catch (_error) {
+                                // Silently ignore — webhook may have already been removed
                             }
                         }
                         delete webhookData.subscriptionIds;

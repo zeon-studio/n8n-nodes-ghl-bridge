@@ -381,7 +381,6 @@ export class GhlBridgeTrigger implements INodeType {
         }
 
         const backendUrl = (credentials.baseUrl as string).replace(/\/$/, "");
-        const bridgeKey = credentials.bridgeKey as string;
 
         if (!webhookData.secret) {
           webhookData.secret = crypto.randomBytes(32).toString("hex");
@@ -391,7 +390,6 @@ export class GhlBridgeTrigger implements INodeType {
           method: "POST",
           url: `${backendUrl}/api/v1/webhooks/register`,
           headers: {
-            Authorization: `Bearer ${bridgeKey}`,
             "Content-Type": "application/json",
           },
           body: {
@@ -403,16 +401,19 @@ export class GhlBridgeTrigger implements INodeType {
         };
 
         try {
-          // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
-          const response = await this.helpers.httpRequest(options);
+          const response = await this.helpers.httpRequestWithAuthentication.call(
+            this,
+            "ghlBridgeApi",
+            options,
+          );
           if (
             response &&
-            response.subscriptions &&
-            response.subscriptions.length > 0
+            (response as { subscriptions?: Array<{ id: string }> }).subscriptions &&
+            (response as { subscriptions: Array<{ id: string }> }).subscriptions.length > 0
           ) {
-            webhookData.subscriptionIds = response.subscriptions.map(
-              (s: any) => s.id,
-            );
+            webhookData.subscriptionIds = (
+              response as { subscriptions: Array<{ id: string }> }
+            ).subscriptions.map((s) => s.id);
           }
           return true;
         } catch (error) {
@@ -425,7 +426,6 @@ export class GhlBridgeTrigger implements INodeType {
         const webhookData = this.getWorkflowStaticData("node");
         const credentials = await this.getCredentials("ghlBridgeApi");
         const backendUrl = (credentials.baseUrl as string).replace(/\/$/, "");
-        const bridgeKey = credentials.bridgeKey as string;
 
         if (
           webhookData.subscriptionIds &&
@@ -435,19 +435,16 @@ export class GhlBridgeTrigger implements INodeType {
             const options: IHttpRequestOptions = {
               method: "DELETE",
               url: `${backendUrl}/api/v1/webhooks/${subId}`,
-              headers: {
-                Authorization: `Bearer ${bridgeKey}`,
-              },
               json: true,
             };
             try {
-              // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
-              await this.helpers.httpRequest(options);
-            } catch (error) {
-              // eslint-disable-next-line no-console
-              console.warn(
-                `Failed to delete webhook subscription ${subId}: ${(error as Error).message}`,
+              await this.helpers.httpRequestWithAuthentication.call(
+                this,
+                "ghlBridgeApi",
+                options,
               );
+            } catch (_error) {
+              // Silently ignore — webhook may have already been removed
             }
           }
           delete webhookData.subscriptionIds;

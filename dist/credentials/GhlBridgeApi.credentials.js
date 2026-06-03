@@ -33,6 +33,15 @@ class GhlBridgeApi {
                 description: "The GHL Bridge Key obtained from the dashboard (brk_...)",
             },
         ];
+        this.authenticate = {
+            type: 'generic',
+            properties: {
+                qs: {
+                    bridge_key: '={{$credentials.bridgeKey}}',
+                    location_id: '={{$credentials.locationId}}',
+                },
+            },
+        };
         this.test = {
             request: {
                 baseURL: '={{$credentials.baseUrl}}',
