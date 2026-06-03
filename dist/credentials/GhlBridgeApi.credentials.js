@@ -5,7 +5,8 @@ class GhlBridgeApi {
     constructor() {
         this.name = "ghlBridgeApi";
         this.displayName = "GHL Bridge API";
-        this.documentationUrl = "";
+        this.icon = "file:ghl-bridge.svg";
+        this.documentationUrl = "https://www.npmjs.com/package/n8n-nodes-ghl-bridge";
         this.properties = [
             {
                 displayName: "Base URL",

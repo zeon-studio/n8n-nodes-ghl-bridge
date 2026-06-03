@@ -2,6 +2,7 @@ import { IAuthenticateGeneric, ICredentialType, INodeProperties, ICredentialTest
 export declare class GhlBridgeApi implements ICredentialType {
     name: string;
     displayName: string;
+    icon: "file:ghl-bridge.svg";
     documentationUrl: string;
     properties: INodeProperties[];
     authenticate: IAuthenticateGeneric;

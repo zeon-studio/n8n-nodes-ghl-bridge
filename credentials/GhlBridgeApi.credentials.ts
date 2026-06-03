@@ -3,7 +3,8 @@ import { IAuthenticateGeneric, ICredentialType, INodeProperties, ICredentialTest
 export class GhlBridgeApi implements ICredentialType {
   name = "ghlBridgeApi";
   displayName = "GHL Bridge API";
-  documentationUrl = "";
+  icon = "file:ghl-bridge.svg" as const;
+  documentationUrl = "https://www.npmjs.com/package/n8n-nodes-ghl-bridge";
 
   properties: INodeProperties[] = [
     {

@@ -14,7 +14,7 @@
   },
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && find credentials nodes -name '*.svg' -o -name '*.png' | while read f; do dir=\"dist/$(dirname $f)\"; mkdir -p \"$dir\"; cp \"$f\" \"$dir/\"; done",
     "dev": "tsc -w",
     "lint": "eslint \"credentials/**/*.ts\" \"nodes/**/*.ts\"",
     "prerelease": "git add -A && git diff --cached --quiet || git commit -m 'chore: release prep'",
