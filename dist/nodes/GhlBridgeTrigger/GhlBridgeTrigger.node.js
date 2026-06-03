@@ -400,6 +400,7 @@ class GhlBridgeTrigger {
                         json: true,
                     };
                     try {
+                        // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
                         const response = await this.helpers.httpRequest(options);
                         if (response &&
                             response.subscriptions &&
@@ -429,9 +430,11 @@ class GhlBridgeTrigger {
                                 json: true,
                             };
                             try {
+                                // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
                                 await this.helpers.httpRequest(options);
                             }
                             catch (error) {
+                                // eslint-disable-next-line no-console
                                 console.warn(`Failed to delete webhook subscription ${subId}: ${error.message}`);
                             }
                         }

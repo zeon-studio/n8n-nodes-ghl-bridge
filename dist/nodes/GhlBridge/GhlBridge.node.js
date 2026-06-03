@@ -255,6 +255,7 @@ class GhlBridge {
         // 1. Fetch short-lived token from Token Broker
         let accessToken;
         try {
+            // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
             const tokenData = await this.helpers.httpRequest({
                 method: "GET",
                 url: `${backendUrl}/api/v1/token`,
@@ -686,6 +687,7 @@ class GhlBridge {
                         const email = this.getNodeParameter("email", i);
                         endpoint = "/users/";
                         qs = { locationId };
+                        // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
                         const listResponse = await this.helpers.httpRequest({
                             method: "GET",
                             url: `${GHL_BASE}${endpoint}`,
@@ -741,6 +743,7 @@ class GhlBridge {
                         ...(Object.keys(body).length > 0 &&
                             ["POST", "PUT"].includes(method) && { body }),
                     };
+                    // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
                     const responseData = await this.helpers.httpRequest(customOptions);
                     returnData.push({ json: responseData, pairedItem: { item: i } });
                     continue;
@@ -762,6 +765,7 @@ class GhlBridge {
                     ...(Object.keys(body).length > 0 &&
                         ["POST", "PUT", "DELETE"].includes(method) && { body }),
                 };
+                // eslint-disable-next-line @n8n/community-nodes/no-http-request-with-manual-auth
                 const responseData = await this.helpers.httpRequest(ghlOptions);
                 returnData.push({ json: responseData, pairedItem: { item: i } });
             }

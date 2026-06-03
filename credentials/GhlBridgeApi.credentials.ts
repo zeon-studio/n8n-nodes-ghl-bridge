@@ -1,4 +1,4 @@
-import { ICredentialType, INodeProperties } from "n8n-workflow";
+import { ICredentialType, INodeProperties, ICredentialTestRequest } from "n8n-workflow";
 
 export class GhlBridgeApi implements ICredentialType {
   name = "ghlBridgeApi";
@@ -34,4 +34,15 @@ export class GhlBridgeApi implements ICredentialType {
       description: "The GHL Bridge Key obtained from the dashboard (brk_...)",
     },
   ];
+
+  test: ICredentialTestRequest = {
+    request: {
+      baseURL: '={{$credentials.baseUrl}}',
+      url: '/api/v1/token',
+      qs: {
+        bridge_key: '={{$credentials.bridgeKey}}',
+        location_id: '={{$credentials.locationId}}',
+      },
+    },
+  };
 }

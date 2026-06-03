@@ -33,6 +33,16 @@ class GhlBridgeApi {
                 description: "The GHL Bridge Key obtained from the dashboard (brk_...)",
             },
         ];
+        this.test = {
+            request: {
+                baseURL: '={{$credentials.baseUrl}}',
+                url: '/api/v1/token',
+                qs: {
+                    bridge_key: '={{$credentials.bridgeKey}}',
+                    location_id: '={{$credentials.locationId}}',
+                },
+            },
+        };
     }
 }
 exports.GhlBridgeApi = GhlBridgeApi;
