@@ -23,6 +23,8 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
+      - name: Update npm client
+        run: npm install -g npm@latest
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
