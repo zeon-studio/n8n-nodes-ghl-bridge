@@ -8,11 +8,15 @@ export const userOperations: INodeProperties = {
   displayOptions: { show: { resource: ["user"] } },
   options: [
     { name: "Get", value: "get", action: "Get a user by ID" },
-    { name: "Get All", value: "getAll", action: "Get all users in a location" },
     {
       name: "Get by Email",
       value: "getByEmail",
       action: "Look up a user by email",
+    },
+    {
+      name: "Get Many",
+      value: "getAll",
+      action: "Get many users in a location",
     },
   ],
   default: "getAll",

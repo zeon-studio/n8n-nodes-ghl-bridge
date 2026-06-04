@@ -7,7 +7,7 @@ export const formOperations: INodeProperties = {
   noDataExpression: true,
   displayOptions: { show: { resource: ["form"] } },
   options: [
-    { name: "Get All", value: "getAll", action: "Get all forms" },
+    { name: 'Get Many', value: "getAll", action: 'Get many forms' },
     {
       name: "Get Submissions",
       value: "getSubmissions",
@@ -23,10 +23,10 @@ export const formFields: INodeProperties[] = [
     displayName: "Limit",
     name: "limit",
     type: "number",
-    default: 20,
+    default: 50,
     typeOptions: { minValue: 1, maxValue: 100 },
     displayOptions: { show: { resource: ["form"], operation: ["getAll"] } },
-    description: "Max number of forms to return",
+    description: 'Max number of results to return',
   },
   // ── GET SUBMISSIONS ──────────────────────────────────────────────────────
   {
@@ -44,12 +44,12 @@ export const formFields: INodeProperties[] = [
     displayName: "Limit",
     name: "limit",
     type: "number",
-    default: 20,
+    default: 50,
     typeOptions: { minValue: 1, maxValue: 100 },
     displayOptions: {
       show: { resource: ["form"], operation: ["getSubmissions"] },
     },
-    description: "Max number of submissions to return",
+    description: 'Max number of results to return',
   },
   {
     displayName: "Start Date",

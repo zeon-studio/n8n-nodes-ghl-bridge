@@ -6,15 +6,9 @@ import {
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
+  NodeConnectionTypes,
+  NodeOperationError,
 } from "n8n-workflow";
-
-/** Standalone helper so no `getCredentials` is in scope — avoids linter rule. */
-async function makeGhlRequest(
-  helpers: IExecuteFunctions['helpers'],
-  options: IHttpRequestOptions,
-): Promise<IDataObject> {
-  return helpers.httpRequest(options) as Promise<IDataObject>;
-}
 import {
   contactFields,
   contactOperations,
@@ -39,6 +33,14 @@ import {
   workflowFields,
   workflowOperations,
 } from "./descriptions/WorkflowDescription";
+
+/** Standalone helper so no `getCredentials` is in scope — avoids linter rule. */
+async function makeGhlRequest(
+  helpers: IExecuteFunctions["helpers"],
+  options: IHttpRequestOptions,
+): Promise<IDataObject> {
+  return helpers.httpRequest(options) as Promise<IDataObject>;
+}
 
 const GHL_BASE = "https://services.leadconnectorhq.com";
 const GHL_VERSION = "2021-07-28";
@@ -158,8 +160,8 @@ export class GhlBridge implements INodeType {
     codex: {
       alias: ["GHL", "ghl", "HighLevel", "GoHighLevel"],
     },
-    inputs: ["main"],
-    outputs: ["main"],
+    inputs: [NodeConnectionTypes.Main],
+    outputs: [NodeConnectionTypes.Main],
     credentials: [
       {
         name: "ghlBridgeApi",
@@ -231,6 +233,7 @@ export class GhlBridge implements INodeType {
             name: "Make Request",
             value: "makeRequest",
             description: "Make a custom API request to GoHighLevel (v2 API)",
+            action: "Make request a custom",
           },
         ],
         default: "makeRequest",
@@ -243,10 +246,10 @@ export class GhlBridge implements INodeType {
           show: { resource: ["custom"], operation: ["makeRequest"] },
         },
         options: [
+          { name: "DELETE", value: "DELETE" },
           { name: "GET", value: "GET" },
           { name: "POST", value: "POST" },
           { name: "PUT", value: "PUT" },
-          { name: "DELETE", value: "DELETE" },
         ],
         default: "GET",
         description: "The HTTP method to use",
@@ -299,6 +302,7 @@ export class GhlBridge implements INodeType {
         description: "Query parameters as JSON object",
       },
     ],
+    usableAsTool: true,
   };
 
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -322,10 +326,14 @@ export class GhlBridge implements INodeType {
         },
       );
       if (!(tokenData as IDataObject)?.access_token)
-        throw new Error("Token Broker returned invalid token response");
+        throw new NodeOperationError(
+          this.getNode(),
+          "Token Broker returned invalid token response",
+        );
       accessToken = (tokenData as IDataObject).access_token as string;
     } catch (error) {
-      throw new Error(
+      throw new NodeOperationError(
+        this.getNode(),
         `Failed to fetch access token from Token Broker: ${(error as Error).message}`,
       );
     }
@@ -584,8 +592,10 @@ export class GhlBridge implements INodeType {
             const groupId = this.getNodeParameter("groupId", i, "") as string;
 
             if (!calendarId && !userId && !groupId) {
-              throw new Error(
+              throw new NodeOperationError(
+                this.getNode(),
                 "One of Calendar ID, User ID, or Group ID is required for Get Events.",
+                { itemIndex: i },
               );
             }
 
@@ -633,16 +643,31 @@ export class GhlBridge implements INodeType {
               appointmentStatus,
             };
           } else if (operation === "updateAppointment") {
-            const appointmentId = this.getNodeParameter("appointmentId", i) as string;
-            const calendarId = this.getNodeParameter("calendarId", i, "") as string;
-            const contactId = this.getNodeParameter("contactId", i, "") as string;
-            const startTime = this.getNodeParameter("startTime", i, "") as string;
+            const appointmentId = this.getNodeParameter(
+              "appointmentId",
+              i,
+            ) as string;
+            const calendarId = this.getNodeParameter(
+              "calendarId",
+              i,
+              "",
+            ) as string;
+            const contactId = this.getNodeParameter(
+              "contactId",
+              i,
+              "",
+            ) as string;
+            const startTime = this.getNodeParameter(
+              "startTime",
+              i,
+              "",
+            ) as string;
             const endTime = this.getNodeParameter("endTime", i, "") as string;
             const title = this.getNodeParameter("title", i, "") as string;
             const appointmentStatus = this.getNodeParameter(
               "appointmentStatus",
               i,
-              "new"
+              "new",
             ) as string;
 
             endpoint = `/calendars/events/appointments/${appointmentId}`;
@@ -651,13 +676,18 @@ export class GhlBridge implements INodeType {
             body = {
               ...(calendarId && { calendarId }),
               ...(contactId && { contactId }),
-              ...(startTime && { startTime: new Date(startTime).toISOString() }),
+              ...(startTime && {
+                startTime: new Date(startTime).toISOString(),
+              }),
               ...(endTime && { endTime: new Date(endTime).toISOString() }),
               ...(title && { title }),
               appointmentStatus,
             };
           } else if (operation === "deleteAppointment") {
-            const appointmentId = this.getNodeParameter("appointmentId", i) as string;
+            const appointmentId = this.getNodeParameter(
+              "appointmentId",
+              i,
+            ) as string;
 
             endpoint = `/calendars/events/appointments/${appointmentId}`;
             method = "DELETE";
@@ -865,7 +895,10 @@ export class GhlBridge implements INodeType {
             ...(Object.keys(body).length > 0 &&
               ["POST", "PUT"].includes(method) && { body }),
           };
-          const responseData = await makeGhlRequest(this.helpers, customOptions);
+          const responseData = await makeGhlRequest(
+            this.helpers,
+            customOptions,
+          );
           returnData.push({ json: responseData, pairedItem: { item: i } });
           continue;
         }
@@ -913,12 +946,14 @@ export class GhlBridge implements INodeType {
         } else {
           const hintSuffix =
             isScopeDenied && scopeHint ? ` | ${scopeHint}` : "";
-          throw new Error(
+          throw new NodeOperationError(
+            this.getNode(),
             `${String(serializable.message)}${
               serializable.statusCode !== undefined
                 ? ` (status ${String(serializable.statusCode)})`
                 : ""
             }${hintSuffix}`,
+            { itemIndex: i },
           );
         }
       }

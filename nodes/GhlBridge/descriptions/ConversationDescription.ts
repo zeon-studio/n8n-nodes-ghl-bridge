@@ -50,7 +50,8 @@ export const conversationFields: INodeProperties[] = [
     displayName: "Limit",
     name: "limit",
     type: "number",
-    default: 20,
+				description: 'Max number of results to return',
+    default: 50,
     typeOptions: { minValue: 1, maxValue: 100 },
     displayOptions: {
       show: { resource: ["conversation"], operation: ["search"] },
@@ -71,7 +72,8 @@ export const conversationFields: INodeProperties[] = [
     displayName: "Message Limit",
     name: "limit",
     type: "number",
-    default: 20,
+				description: 'Max number of results to return',
+    default: 50,
     typeOptions: { minValue: 1, maxValue: 100 },
     displayOptions: {
       show: { resource: ["conversation"], operation: ["getMessages"] },
@@ -142,11 +144,11 @@ export const calendarOperations: INodeProperties = {
   noDataExpression: true,
   displayOptions: { show: { resource: ["calendar"] } },
   options: [
+    { name: "Book Appointment", value: "bookAppointment", action: "Book a new appointment" },
+    { name: "Delete Appointment", value: "deleteAppointment", action: "Delete an existing appointment" },
     { name: "Get Events", value: "getEvents", action: "Get calendar events" },
     { name: "Get Free Slots", value: "getFreeSlots", action: "Get free slots for a calendar" },
-    { name: "Book Appointment", value: "bookAppointment", action: "Book a new appointment" },
     { name: "Update Appointment", value: "updateAppointment", action: "Update an existing appointment" },
-    { name: "Delete Appointment", value: "deleteAppointment", action: "Delete an existing appointment" },
   ],
   default: "getEvents",
 };
@@ -173,7 +175,7 @@ export const calendarFields: INodeProperties[] = [
     },
   },
   {
-    displayName: "Calendar ID (optional)",
+    displayName: 'Calendar ID (Optional)',
     name: "calendarId",
     type: "string",
     default: "",
@@ -183,7 +185,7 @@ export const calendarFields: INodeProperties[] = [
     description: "Optional. Provide Calendar ID, User ID, or Group ID.",
   },
   {
-    displayName: "User ID (optional)",
+    displayName: 'User ID (Optional)',
     name: "userId",
     type: "string",
     default: "",
@@ -193,7 +195,7 @@ export const calendarFields: INodeProperties[] = [
     description: "Optional. Required if Calendar ID and Group ID are empty.",
   },
   {
-    displayName: "Group ID (optional)",
+    displayName: 'Group ID (Optional)',
     name: "groupId",
     type: "string",
     default: "",
@@ -305,12 +307,12 @@ export const calendarFields: INodeProperties[] = [
     name: "appointmentStatus",
     type: "options",
     options: [
-      { name: "New", value: "new" },
-      { name: "Confirmed", value: "confirmed" },
       { name: "Cancelled", value: "cancelled" },
-      { name: "Showed", value: "showed" },
-      { name: "No-Show", value: "noshow" },
+      { name: "Confirmed", value: "confirmed" },
       { name: "Invalid", value: "invalid" },
+      { name: "New", value: "new" },
+      { name: "No-Show", value: "noshow" },
+      { name: "Showed", value: "showed" },
     ],
     default: "new",
     displayOptions: {

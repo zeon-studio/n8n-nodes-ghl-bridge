@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GhlBridgeTrigger = void 0;
 const crypto = __importStar(require("crypto"));
+const n8n_workflow_1 = require("n8n-workflow");
 const GHL_TRIGGER_RESOURCES = [
     { name: "Appointment", value: "appointment" },
     { name: "Contact", value: "contact" },
@@ -87,6 +88,7 @@ function parseManualEventTypes(raw) {
 }
 class GhlBridgeTrigger {
     constructor() {
+        this.usableAsTool = true;
         this.description = {
             displayName: "GoHighLevel Bridge Trigger",
             name: "ghlBridgeTrigger",
@@ -102,7 +104,7 @@ class GhlBridgeTrigger {
                 alias: ["GHL", "ghl", "HighLevel", "GoHighLevel", "Webhook"],
             },
             inputs: [],
-            outputs: ["main"],
+            outputs: [n8n_workflow_1.NodeConnectionTypes.Main],
             credentials: [
                 {
                     name: "ghlBridgeApi",
@@ -131,9 +133,9 @@ class GhlBridgeTrigger {
                             description: "Listen to every event received for this location",
                         },
                         {
-                            name: "Single Event",
-                            value: "single",
-                            description: "Listen to a single specific event",
+                            name: "Manual Event Names",
+                            value: "manual",
+                            description: "Enter custom event names for events not listed in the catalog",
                         },
                         {
                             name: "Multiple Events",
@@ -141,9 +143,9 @@ class GhlBridgeTrigger {
                             description: "Choose multiple known GoHighLevel events",
                         },
                         {
-                            name: "Manual Event Names",
-                            value: "manual",
-                            description: "Enter custom event names for events not listed in the catalog",
+                            name: "Single Event",
+                            value: "single",
+                            description: "Listen to a single specific event",
                         },
                     ],
                     default: "single",
@@ -169,10 +171,11 @@ class GhlBridgeTrigger {
                     displayName: "Operation",
                     name: "operation",
                     type: "options",
+                    noDataExpression: true,
                     options: [
                         { name: "Appointment Created", value: "AppointmentCreate", action: "On appointment created" },
-                        { name: "Appointment Updated", value: "AppointmentUpdate", action: "On appointment updated" },
                         { name: "Appointment Deleted", value: "AppointmentDelete", action: "On appointment deleted" },
+                        { name: "Appointment Updated", value: "AppointmentUpdate", action: "On appointment updated" },
                     ],
                     default: "AppointmentCreate",
                     displayOptions: {
@@ -188,6 +191,7 @@ class GhlBridgeTrigger {
                     displayName: "Operation",
                     name: "operation",
                     type: "options",
+                    noDataExpression: true,
                     options: [
                         { name: "Contact Birthday", value: "ContactBirthday", action: "On contact birthday" },
                         { name: "Contact Created", value: "ContactCreate", action: "On contact created" },
@@ -211,6 +215,7 @@ class GhlBridgeTrigger {
                     displayName: "Operation",
                     name: "operation",
                     type: "options",
+                    noDataExpression: true,
                     options: [
                         { name: "Conversation Unread Updated", value: "ConversationUnreadUpdate", action: "On conversation unread updated" },
                         { name: "Inbound Message", value: "InboundMessage", action: "On inbound message" },
@@ -230,6 +235,7 @@ class GhlBridgeTrigger {
                     displayName: "Operation",
                     name: "operation",
                     type: "options",
+                    noDataExpression: true,
                     options: [
                         { name: "Form Submitted", value: "FormSubmit", action: "On form submitted" },
                     ],
@@ -247,10 +253,11 @@ class GhlBridgeTrigger {
                     displayName: "Operation",
                     name: "operation",
                     type: "options",
+                    noDataExpression: true,
                     options: [
                         { name: "Location Created", value: "LocationCreate", action: "On location created" },
-                        { name: "Location Updated", value: "LocationUpdate", action: "On location updated" },
                         { name: "Location Deleted", value: "LocationDelete", action: "On location deleted" },
+                        { name: "Location Updated", value: "LocationUpdate", action: "On location updated" },
                     ],
                     default: "LocationCreate",
                     displayOptions: {
@@ -266,6 +273,7 @@ class GhlBridgeTrigger {
                     displayName: "Operation",
                     name: "operation",
                     type: "options",
+                    noDataExpression: true,
                     options: [
                         { name: "Note Created", value: "NoteCreate", action: "On note created" },
                         { name: "Note Deleted", value: "NoteDelete", action: "On note deleted" },
@@ -285,6 +293,7 @@ class GhlBridgeTrigger {
                     displayName: "Operation",
                     name: "operation",
                     type: "options",
+                    noDataExpression: true,
                     options: [
                         { name: "Opportunity Assigned To Updated", value: "OpportunityAssignedToUpdate", action: "On opportunity assigned to updated" },
                         { name: "Opportunity Created", value: "OpportunityCreate", action: "On opportunity created" },
@@ -309,6 +318,7 @@ class GhlBridgeTrigger {
                     displayName: "Operation",
                     name: "operation",
                     type: "options",
+                    noDataExpression: true,
                     options: [
                         { name: "Task Completed", value: "TaskComplete", action: "On task completed" },
                         { name: "Task Created", value: "TaskCreate", action: "On task created" },
@@ -348,9 +358,10 @@ class GhlBridgeTrigger {
                             triggerMode: ["manual"],
                         },
                     },
-                    description: "Comma separated event names (e.g. ContactCreate, OpportunityUpdate)",
+                    description: 'Comma-separated event names (e.g. ContactCreate, OpportunityUpdate)',
                 },
             ],
+            usableAsTool: true,
         };
         this.webhookMethods = {
             default: {
@@ -407,7 +418,7 @@ class GhlBridgeTrigger {
                         return true;
                     }
                     catch (error) {
-                        throw new Error(`Failed to register webhook: ${error.message}`);
+                        throw new n8n_workflow_1.NodeOperationError(this.getNode(), error, { message: `Failed to register webhook: ${error.message}` });
                     }
                 },
                 async delete() {
@@ -425,7 +436,7 @@ class GhlBridgeTrigger {
                             try {
                                 await this.helpers.httpRequestWithAuthentication.call(this, "ghlBridgeApi", options);
                             }
-                            catch (_error) {
+                            catch {
                                 // Silently ignore — webhook may have already been removed
                             }
                         }
@@ -437,7 +448,6 @@ class GhlBridgeTrigger {
         };
     }
     async webhook() {
-        const req = this.getRequestObject();
         const headers = this.getHeaderData();
         const bodyData = this.getBodyData();
         const webhookData = this.getWorkflowStaticData("node");

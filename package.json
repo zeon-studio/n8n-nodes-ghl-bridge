@@ -1,7 +1,7 @@
 {
   "name": "n8n-nodes-ghl-bridge",
   "version": "1.4.7",
-  "description": "GoHighLevel Token Broker integration",
+  "description": "GoHighLevel Bridge (Token Broker) integration for n8n",
   "author": {
     "name": "Zeon Studio"
   },
@@ -45,7 +45,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "n8n": {
-    "n8nNodesApiVersion": 1,
+    "n8nNodesApiVersion": 2,
     "credentials": [
       "dist/credentials/GhlBridgeApi.credentials.js"
     ],

@@ -9,33 +9,10 @@ exports.locationOperations = {
     noDataExpression: true,
     displayOptions: { show: { resource: ["location"] } },
     options: [
-        { name: "Get", value: "get", action: "Get location details" },
-        // Custom Fields
-        {
-            name: "Get Custom Fields",
-            value: "getCustomFields",
-            action: "Get all custom fields",
-        },
         {
             name: "Create Custom Field",
             value: "createCustomField",
             action: "Create a custom field",
-        },
-        {
-            name: "Update Custom Field",
-            value: "updateCustomField",
-            action: "Update a custom field",
-        },
-        {
-            name: "Delete Custom Field",
-            value: "deleteCustomField",
-            action: "Delete a custom field",
-        },
-        // Custom Values
-        {
-            name: "Get Custom Values",
-            value: "getCustomValues",
-            action: "Get all custom values",
         },
         {
             name: "Create Custom Value",
@@ -43,14 +20,35 @@ exports.locationOperations = {
             action: "Create a custom value",
         },
         {
-            name: "Update Custom Value",
-            value: "updateCustomValue",
-            action: "Update a custom value",
+            name: "Delete Custom Field",
+            value: "deleteCustomField",
+            action: "Delete a custom field",
         },
         {
             name: "Delete Custom Value",
             value: "deleteCustomValue",
             action: "Delete a custom value",
+        },
+        { name: "Get", value: "get", action: "Get location details" },
+        {
+            name: "Get Custom Fields",
+            value: "getCustomFields",
+            action: "Get all custom fields",
+        },
+        {
+            name: "Get Custom Values",
+            value: "getCustomValues",
+            action: "Get all custom values",
+        },
+        {
+            name: "Update Custom Field",
+            value: "updateCustomField",
+            action: "Update a custom field",
+        },
+        {
+            name: "Update Custom Value",
+            value: "updateCustomValue",
+            action: "Update a custom value",
         },
     ],
     default: "get",
@@ -116,18 +114,18 @@ exports.locationFields = [
         name: "dataType",
         type: "options",
         options: [
-            { name: "Text", value: "TEXT" },
+            { name: "Checkbox", value: "CHECKBOX" },
+            { name: "Date", value: "DATE" },
+            { name: "Email", value: "EMAIL" },
+            { name: "File Upload", value: "FILE_UPLOAD" },
             { name: "Large Text", value: "LARGE_TEXT" },
+            { name: "Monetary", value: "MONETARY" },
+            { name: "Multiple Options", value: "MULTIPLE_OPTIONS" },
             { name: "Number", value: "NUMBER" },
             { name: "Phone", value: "PHONE" },
-            { name: "Email", value: "EMAIL" },
-            { name: "Date", value: "DATE" },
-            { name: "Checkbox", value: "CHECKBOX" },
             { name: "Single Options", value: "SINGLE_OPTIONS" },
-            { name: "Multiple Options", value: "MULTIPLE_OPTIONS" },
-            { name: "Monetary", value: "MONETARY" },
+            { name: "Text", value: "TEXT" },
             { name: "URL", value: "URL" },
-            { name: "File Upload", value: "FILE_UPLOAD" },
         ],
         default: "TEXT",
         displayOptions: {

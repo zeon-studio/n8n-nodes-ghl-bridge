@@ -1,5 +1,6 @@
 import { IHookFunctions, INodeType, INodeTypeDescription, IWebhookFunctions, IWebhookResponseData } from "n8n-workflow";
 export declare class GhlBridgeTrigger implements INodeType {
+    usableAsTool: boolean;
     description: INodeTypeDescription;
     webhookMethods: {
         default: {

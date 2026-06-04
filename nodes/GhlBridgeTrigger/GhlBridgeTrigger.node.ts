@@ -7,6 +7,8 @@ import {
   INodeTypeDescription,
   IWebhookFunctions,
   IWebhookResponseData,
+  NodeConnectionTypes,
+  NodeOperationError,
 } from "n8n-workflow";
 
 const GHL_TRIGGER_RESOURCES: INodePropertyOptions[] = [
@@ -67,6 +69,7 @@ function parseManualEventTypes(raw: string): string[] {
 }
 
 export class GhlBridgeTrigger implements INodeType {
+  usableAsTool = true;
   description: INodeTypeDescription = {
     displayName: "GoHighLevel Bridge Trigger",
     name: "ghlBridgeTrigger",
@@ -82,7 +85,7 @@ export class GhlBridgeTrigger implements INodeType {
       alias: ["GHL", "ghl", "HighLevel", "GoHighLevel", "Webhook"],
     },
     inputs: [],
-    outputs: ["main"],
+    outputs: [NodeConnectionTypes.Main],
     credentials: [
       {
         name: "ghlBridgeApi",
@@ -111,9 +114,10 @@ export class GhlBridgeTrigger implements INodeType {
             description: "Listen to every event received for this location",
           },
           {
-            name: "Single Event",
-            value: "single",
-            description: "Listen to a single specific event",
+            name: "Manual Event Names",
+            value: "manual",
+            description:
+              "Enter custom event names for events not listed in the catalog",
           },
           {
             name: "Multiple Events",
@@ -121,10 +125,9 @@ export class GhlBridgeTrigger implements INodeType {
             description: "Choose multiple known GoHighLevel events",
           },
           {
-            name: "Manual Event Names",
-            value: "manual",
-            description:
-              "Enter custom event names for events not listed in the catalog",
+            name: "Single Event",
+            value: "single",
+            description: "Listen to a single specific event",
           },
         ],
         default: "single",
@@ -152,10 +155,11 @@ export class GhlBridgeTrigger implements INodeType {
         displayName: "Operation",
         name: "operation",
         type: "options",
+								noDataExpression: true,
         options: [
           { name: "Appointment Created", value: "AppointmentCreate", action: "On appointment created" },
-          { name: "Appointment Updated", value: "AppointmentUpdate", action: "On appointment updated" },
           { name: "Appointment Deleted", value: "AppointmentDelete", action: "On appointment deleted" },
+          { name: "Appointment Updated", value: "AppointmentUpdate", action: "On appointment updated" },
         ],
         default: "AppointmentCreate",
         displayOptions: {
@@ -172,6 +176,7 @@ export class GhlBridgeTrigger implements INodeType {
         displayName: "Operation",
         name: "operation",
         type: "options",
+								noDataExpression: true,
         options: [
           { name: "Contact Birthday", value: "ContactBirthday", action: "On contact birthday" },
           { name: "Contact Created", value: "ContactCreate", action: "On contact created" },
@@ -196,6 +201,7 @@ export class GhlBridgeTrigger implements INodeType {
         displayName: "Operation",
         name: "operation",
         type: "options",
+								noDataExpression: true,
         options: [
           { name: "Conversation Unread Updated", value: "ConversationUnreadUpdate", action: "On conversation unread updated" },
           { name: "Inbound Message", value: "InboundMessage", action: "On inbound message" },
@@ -216,6 +222,7 @@ export class GhlBridgeTrigger implements INodeType {
         displayName: "Operation",
         name: "operation",
         type: "options",
+								noDataExpression: true,
         options: [
           { name: "Form Submitted", value: "FormSubmit", action: "On form submitted" },
         ],
@@ -234,10 +241,11 @@ export class GhlBridgeTrigger implements INodeType {
         displayName: "Operation",
         name: "operation",
         type: "options",
+								noDataExpression: true,
         options: [
           { name: "Location Created", value: "LocationCreate", action: "On location created" },
-          { name: "Location Updated", value: "LocationUpdate", action: "On location updated" },
           { name: "Location Deleted", value: "LocationDelete", action: "On location deleted" },
+          { name: "Location Updated", value: "LocationUpdate", action: "On location updated" },
         ],
         default: "LocationCreate",
         displayOptions: {
@@ -254,6 +262,7 @@ export class GhlBridgeTrigger implements INodeType {
         displayName: "Operation",
         name: "operation",
         type: "options",
+								noDataExpression: true,
         options: [
           { name: "Note Created", value: "NoteCreate", action: "On note created" },
           { name: "Note Deleted", value: "NoteDelete", action: "On note deleted" },
@@ -274,6 +283,7 @@ export class GhlBridgeTrigger implements INodeType {
         displayName: "Operation",
         name: "operation",
         type: "options",
+								noDataExpression: true,
         options: [
           { name: "Opportunity Assigned To Updated", value: "OpportunityAssignedToUpdate", action: "On opportunity assigned to updated" },
           { name: "Opportunity Created", value: "OpportunityCreate", action: "On opportunity created" },
@@ -299,6 +309,7 @@ export class GhlBridgeTrigger implements INodeType {
         displayName: "Operation",
         name: "operation",
         type: "options",
+								noDataExpression: true,
         options: [
           { name: "Task Completed", value: "TaskComplete", action: "On task completed" },
           { name: "Task Created", value: "TaskCreate", action: "On task created" },
@@ -340,10 +351,10 @@ export class GhlBridgeTrigger implements INodeType {
             triggerMode: ["manual"],
           },
         },
-        description:
-          "Comma separated event names (e.g. ContactCreate, OpportunityUpdate)",
+        description: 'Comma-separated event names (e.g. ContactCreate, OpportunityUpdate)',
       },
     ],
+		usableAsTool: true,
   };
 
   webhookMethods = {
@@ -417,8 +428,10 @@ export class GhlBridgeTrigger implements INodeType {
           }
           return true;
         } catch (error) {
-          throw new Error(
-            `Failed to register webhook: ${(error as Error).message}`,
+          throw new NodeOperationError(
+            this.getNode(),
+            error as Error,
+            { message: `Failed to register webhook: ${(error as Error).message}` }
           );
         }
       },
@@ -443,7 +456,7 @@ export class GhlBridgeTrigger implements INodeType {
                 "ghlBridgeApi",
                 options,
               );
-            } catch (_error) {
+            } catch {
               // Silently ignore — webhook may have already been removed
             }
           }
@@ -456,7 +469,6 @@ export class GhlBridgeTrigger implements INodeType {
   };
 
   async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
-    const req = this.getRequestObject();
     const headers = this.getHeaderData();
     const bodyData = this.getBodyData();
     const webhookData = this.getWorkflowStaticData("node");

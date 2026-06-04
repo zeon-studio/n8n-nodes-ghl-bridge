@@ -10,17 +10,17 @@ exports.opportunityOperations = {
     options: [
         { name: "Create", value: "create", action: "Create an opportunity" },
         { name: "Get", value: "get", action: "Get an opportunity" },
+        {
+            name: "Get Pipelines",
+            value: "getPipelines",
+            action: "Get all pipelines",
+        },
         { name: "Search", value: "search", action: "Search opportunities" },
         { name: "Update", value: "update", action: "Update an opportunity" },
         {
             name: "Update Status",
             value: "updateStatus",
             action: "Update opportunity status",
-        },
-        {
-            name: "Get Pipelines",
-            value: "getPipelines",
-            action: "Get all pipelines",
         },
     ],
     default: "search",
@@ -56,11 +56,11 @@ exports.opportunityFields = [
         name: "status",
         type: "options",
         options: [
+            { name: "Abandoned", value: "abandoned" },
             { name: "All", value: "all" },
+            { name: "Lost", value: "lost" },
             { name: "Open", value: "open" },
             { name: "Won", value: "won" },
-            { name: "Lost", value: "lost" },
-            { name: "Abandoned", value: "abandoned" },
         ],
         default: "all",
         displayOptions: {
@@ -71,7 +71,8 @@ exports.opportunityFields = [
         displayName: "Limit",
         name: "limit",
         type: "number",
-        default: 20,
+        description: "Max number of results to return",
+        default: 50,
         typeOptions: { minValue: 1, maxValue: 100 },
         displayOptions: {
             show: { resource: ["opportunity"], operation: ["search"] },

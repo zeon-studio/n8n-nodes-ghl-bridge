@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GhlBridge = void 0;
+const n8n_workflow_1 = require("n8n-workflow");
 /** Standalone helper so no `getCredentials` is in scope — avoids linter rule. */
 async function makeGhlRequest(helpers, options) {
     return helpers.httpRequest(options);
@@ -114,8 +115,8 @@ class GhlBridge {
             codex: {
                 alias: ["GHL", "ghl", "HighLevel", "GoHighLevel"],
             },
-            inputs: ["main"],
-            outputs: ["main"],
+            inputs: [n8n_workflow_1.NodeConnectionTypes.Main],
+            outputs: [n8n_workflow_1.NodeConnectionTypes.Main],
             credentials: [
                 {
                     name: "ghlBridgeApi",
@@ -178,6 +179,7 @@ class GhlBridge {
                             name: "Make Request",
                             value: "makeRequest",
                             description: "Make a custom API request to GoHighLevel (v2 API)",
+                            action: 'Make request a custom',
                         },
                     ],
                     default: "makeRequest",
@@ -190,10 +192,10 @@ class GhlBridge {
                         show: { resource: ["custom"], operation: ["makeRequest"] },
                     },
                     options: [
+                        { name: "DELETE", value: "DELETE" },
                         { name: "GET", value: "GET" },
                         { name: "POST", value: "POST" },
                         { name: "PUT", value: "PUT" },
-                        { name: "DELETE", value: "DELETE" },
                     ],
                     default: "GET",
                     description: "The HTTP method to use",
@@ -246,6 +248,7 @@ class GhlBridge {
                     description: "Query parameters as JSON object",
                 },
             ],
+            usableAsTool: true,
         };
     }
     async execute() {
@@ -264,11 +267,11 @@ class GhlBridge {
                 json: true,
             });
             if (!(tokenData === null || tokenData === void 0 ? void 0 : tokenData.access_token))
-                throw new Error("Token Broker returned invalid token response");
+                throw new n8n_workflow_1.NodeOperationError(this.getNode(), "Token Broker returned invalid token response");
             accessToken = tokenData.access_token;
         }
         catch (error) {
-            throw new Error(`Failed to fetch access token from Token Broker: ${error.message}`);
+            throw new n8n_workflow_1.NodeOperationError(this.getNode(), `Failed to fetch access token from Token Broker: ${error.message}`);
         }
         // 2. Execute per-item logic
         for (let i = 0; i < items.length; i++) {
@@ -486,7 +489,7 @@ class GhlBridge {
                         const userId = this.getNodeParameter("userId", i, "");
                         const groupId = this.getNodeParameter("groupId", i, "");
                         if (!calendarId && !userId && !groupId) {
-                            throw new Error("One of Calendar ID, User ID, or Group ID is required for Get Events.");
+                            throw new n8n_workflow_1.NodeOperationError(this.getNode(), "One of Calendar ID, User ID, or Group ID is required for Get Events.", { itemIndex: i });
                         }
                         endpoint = "/calendars/events";
                         qs = {
@@ -787,9 +790,9 @@ class GhlBridge {
                 }
                 else {
                     const hintSuffix = isScopeDenied && scopeHint ? ` | ${scopeHint}` : "";
-                    throw new Error(`${String(serializable.message)}${serializable.statusCode !== undefined
+                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), `${String(serializable.message)}${serializable.statusCode !== undefined
                         ? ` (status ${String(serializable.statusCode)})`
-                        : ""}${hintSuffix}`);
+                        : ""}${hintSuffix}`, { itemIndex: i });
                 }
             }
         }

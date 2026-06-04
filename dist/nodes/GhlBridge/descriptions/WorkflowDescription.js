@@ -8,14 +8,14 @@ exports.workflowOperations = {
     noDataExpression: true,
     displayOptions: { show: { resource: ["workflow"] } },
     options: [
-        { name: "Get All", value: "getAll", action: "Get all workflows" },
         {
             name: "Add Contact to Workflow",
             value: "addContact",
             action: "Add a contact to a workflow",
         },
+        { name: 'Get Many', value: "getAll", action: 'Get many workflows' },
         {
-            name: "Remove Contact from Workflow",
+            name: 'Remove Contact From Workflow',
             value: "removeContact",
             action: "Remove a contact from a workflow",
         },
