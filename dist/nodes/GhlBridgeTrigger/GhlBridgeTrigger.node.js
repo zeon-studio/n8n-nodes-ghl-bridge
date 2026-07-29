@@ -40,7 +40,6 @@ const GHL_TRIGGER_RESOURCES = [
     { name: "Appointment", value: "appointment" },
     { name: "Contact", value: "contact" },
     { name: "Conversation", value: "conversation" },
-    { name: "Form", value: "form" },
     { name: "Location", value: "location" },
     { name: "Note", value: "note" },
     { name: "Opportunity", value: "opportunity" },
@@ -56,12 +55,10 @@ const GHL_ALL_EVENT_OPTIONS = [
     { name: "Contact Deleted", value: "ContactDelete", action: "On contact deleted" },
     { name: "Contact DND Updated", value: "ContactDndUpdate", action: "On contact dnd updated" },
     { name: "Contact Tag Updated", value: "ContactTagUpdate", action: "On contact tag updated" },
-    { name: "Contact Merged", value: "ContactMerge", action: "On contact merged" },
-    { name: "Contact Birthday", value: "ContactBirthday", action: "On contact birthday" },
     { name: "Conversation Unread Updated", value: "ConversationUnreadUpdate", action: "On conversation unread updated" },
+    { name: "Conversation Updated", value: "ConversationUpdate", action: "On conversation updated" },
     { name: "Inbound Message", value: "InboundMessage", action: "On inbound message" },
     { name: "Outbound Message", value: "OutboundMessage", action: "On outbound message" },
-    { name: "Form Submitted", value: "FormSubmit", action: "On form submitted" },
     { name: "Location Created", value: "LocationCreate", action: "On location created" },
     { name: "Location Updated", value: "LocationUpdate", action: "On location updated" },
     { name: "Location Deleted", value: "LocationDelete", action: "On location deleted" },
@@ -75,7 +72,6 @@ const GHL_ALL_EVENT_OPTIONS = [
     { name: "Opportunity Assigned To Updated", value: "OpportunityAssignedToUpdate", action: "On opportunity assigned to updated" },
     { name: "Opportunity Monetary Value Updated", value: "OpportunityMonetaryValueUpdate", action: "On opportunity monetary value updated" },
     { name: "Opportunity Stage Updated", value: "OpportunityStageUpdate", action: "On opportunity stage updated" },
-    { name: "Opportunity Stale", value: "OpportunityStale", action: "On opportunity stale" },
     { name: "Task Created", value: "TaskCreate", action: "On task created" },
     { name: "Task Deleted", value: "TaskDelete", action: "On task deleted" },
     { name: "Task Completed", value: "TaskComplete", action: "On task completed" },
@@ -95,7 +91,7 @@ class GhlBridgeTrigger {
             icon: "file:ghl-webhook.svg",
             group: ["trigger"],
             version: 1,
-            subtitle: '={{$parameter["resource"] + " • " + $parameter["operation"]}}',
+            subtitle: '={{ $parameter["triggerMode"] === "single" ? $parameter["resource"] + " • " + $parameter["operation"] : ($parameter["triggerMode"] === "catalog" ? $parameter["resource"] + " • " + ($parameter["eventTypesCatalog"] || []).length + " events" : ($parameter["triggerMode"] === "manual" ? $parameter["eventTypesManual"] : "All events")) }}',
             description: "Triggers on GoHighLevel Webhooks via Token Broker",
             defaults: {
                 name: "GHL Bridge Trigger",
@@ -193,11 +189,9 @@ class GhlBridgeTrigger {
                     type: "options",
                     noDataExpression: true,
                     options: [
-                        { name: "Contact Birthday", value: "ContactBirthday", action: "On contact birthday" },
                         { name: "Contact Created", value: "ContactCreate", action: "On contact created" },
                         { name: "Contact Deleted", value: "ContactDelete", action: "On contact deleted" },
                         { name: "Contact DND Updated", value: "ContactDndUpdate", action: "On contact dnd updated" },
-                        { name: "Contact Merged", value: "ContactMerge", action: "On contact merged" },
                         { name: "Contact Tag Updated", value: "ContactTagUpdate", action: "On contact tag updated" },
                         { name: "Contact Updated", value: "ContactUpdate", action: "On contact updated" },
                     ],
@@ -218,6 +212,7 @@ class GhlBridgeTrigger {
                     noDataExpression: true,
                     options: [
                         { name: "Conversation Unread Updated", value: "ConversationUnreadUpdate", action: "On conversation unread updated" },
+                        { name: "Conversation Updated", value: "ConversationUpdate", action: "On conversation updated" },
                         { name: "Inbound Message", value: "InboundMessage", action: "On inbound message" },
                         { name: "Outbound Message", value: "OutboundMessage", action: "On outbound message" },
                     ],
@@ -229,24 +224,6 @@ class GhlBridgeTrigger {
                         },
                     },
                     description: "The conversation event to listen for",
-                },
-                // ── OPERATION: Form ───────────────────────────────────────────────────
-                {
-                    displayName: "Operation",
-                    name: "operation",
-                    type: "options",
-                    noDataExpression: true,
-                    options: [
-                        { name: "Form Submitted", value: "FormSubmit", action: "On form submitted" },
-                    ],
-                    default: "FormSubmit",
-                    displayOptions: {
-                        show: {
-                            triggerMode: ["single"],
-                            resource: ["form"],
-                        },
-                    },
-                    description: "The form event to listen for",
                 },
                 // ── OPERATION: Location ───────────────────────────────────────────────
                 {
@@ -300,7 +277,6 @@ class GhlBridgeTrigger {
                         { name: "Opportunity Deleted", value: "OpportunityDelete", action: "On opportunity deleted" },
                         { name: "Opportunity Monetary Value Updated", value: "OpportunityMonetaryValueUpdate", action: "On opportunity monetary value updated" },
                         { name: "Opportunity Stage Updated", value: "OpportunityStageUpdate", action: "On opportunity stage updated" },
-                        { name: "Opportunity Stale", value: "OpportunityStale", action: "On opportunity stale" },
                         { name: "Opportunity Status Updated", value: "OpportunityStatusUpdate", action: "On opportunity status updated" },
                         { name: "Opportunity Updated", value: "OpportunityUpdate", action: "On opportunity updated" },
                     ],
@@ -366,7 +342,12 @@ class GhlBridgeTrigger {
         this.webhookMethods = {
             default: {
                 async checkExists() {
-                    return false;
+                    // Subscriptions we already registered are recorded in the workflow's
+                    // static data. Reporting them as existing stops n8n from registering a
+                    // duplicate every time the workflow is republished or n8n restarts.
+                    const webhookData = this.getWorkflowStaticData("node");
+                    return (Array.isArray(webhookData.subscriptionIds) &&
+                        webhookData.subscriptionIds.length > 0);
                 },
                 async create() {
                     const webhookUrl = this.getNodeWebhookUrl("default");

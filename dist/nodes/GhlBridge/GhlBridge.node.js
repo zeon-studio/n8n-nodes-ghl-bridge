@@ -2,10 +2,6 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GhlBridge = void 0;
 const n8n_workflow_1 = require("n8n-workflow");
-/** Standalone helper so no `getCredentials` is in scope — avoids linter rule. */
-async function makeGhlRequest(helpers, options) {
-    return helpers.httpRequest(options);
-}
 const ContactDescription_1 = require("./descriptions/ContactDescription");
 const ConversationDescription_1 = require("./descriptions/ConversationDescription");
 const FormDescription_1 = require("./descriptions/FormDescription");
@@ -13,6 +9,10 @@ const LocationDescription_1 = require("./descriptions/LocationDescription");
 const OpportunityDescription_1 = require("./descriptions/OpportunityDescription");
 const UserDescription_1 = require("./descriptions/UserDescription");
 const WorkflowDescription_1 = require("./descriptions/WorkflowDescription");
+/** Standalone helper so no `getCredentials` is in scope — avoids linter rule. */
+async function makeGhlRequest(helpers, options) {
+    return helpers.httpRequest(options);
+}
 const GHL_BASE = "https://services.leadconnectorhq.com";
 const GHL_VERSION = "2021-07-28";
 const OPERATION_SCOPE_HINTS = {
@@ -179,7 +179,7 @@ class GhlBridge {
                             name: "Make Request",
                             value: "makeRequest",
                             description: "Make a custom API request to GoHighLevel (v2 API)",
-                            action: 'Make request a custom',
+                            action: "Make request a custom",
                         },
                     ],
                     default: "makeRequest",
@@ -545,7 +545,9 @@ class GhlBridge {
                         body = {
                             ...(calendarId && { calendarId }),
                             ...(contactId && { contactId }),
-                            ...(startTime && { startTime: new Date(startTime).toISOString() }),
+                            ...(startTime && {
+                                startTime: new Date(startTime).toISOString(),
+                            }),
                             ...(endTime && { endTime: new Date(endTime).toISOString() }),
                             ...(title && { title }),
                             appointmentStatus,

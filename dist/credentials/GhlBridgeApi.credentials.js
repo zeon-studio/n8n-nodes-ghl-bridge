@@ -37,6 +37,9 @@ class GhlBridgeApi {
         this.authenticate = {
             type: 'generic',
             properties: {
+                headers: {
+                    Authorization: '=Bearer {{$credentials.bridgeKey}}',
+                },
                 qs: {
                     bridge_key: '={{$credentials.bridgeKey}}',
                     location_id: '={{$credentials.locationId}}',
